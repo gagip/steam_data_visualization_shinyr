@@ -95,15 +95,30 @@ ui <- fluidPage(
                # 추천분석 탭
                #-----------------------------------------
                tabPanel("추천분석",
-                        column(3,
-                               # 장르
-                               selectInput(inputId = "genres",
-                                           label = "장르 선택",
-                                           choices = c("Action", "Indie", "RPG", 
-                                                       "Strategy", "Simulation", "Casual",
-                                                       "Sports", "Racing"),
-                                           multiple = T)
-                        )    
+                        sidebarLayout(
+                            #-----------------------------------------
+                            # 추천분석 탭::input
+                            #-----------------------------------------
+                            sidebarPanel(
+                                selectInput(inputId = "tag",
+                                            label = "만들고 싶은 게임 성향(장르 포함)",
+                                            choices = steam.tag[,-1] %>% colnames(),
+                                            multiple = T)
+                                
+                            ),
+                            
+                            #-----------------------------------------
+                            # 추천분석 탭::output
+                            #-----------------------------------------
+                            mainPanel(
+                                verbatimTextOutput(outputId = "recommend_game_text"),
+                                includeHTML("test.html"),
+                                DT::dataTableOutput(outputId = "recommend_game_data")
+                            )
+                            
+                            
+                            
+                        )
                )
                
     )
@@ -250,6 +265,35 @@ server <- function(input, output) {
                       legend.title = element_text(size = 15, face = "bold"))
         }
     })
+    
+    #-----------------------------------------
+    # 추천분석 테이블 그래프
+    #-----------------------------------------
+    tag_data = reactive({
+        if(!is.null(input$tag)){
+            temp = steam.tag %>% 
+                select_("appid", "input$tag") 
+            temp = temp %>% mutate(total = temp[,-1] %>% rowSums(),
+                                   mean = apply(temp[,-1],1,mean),
+                                   var = apply(temp[,-1],1, var) )
+            # 인기 순 # 내가 선택한 태그들이 골고루 들어있어야 함
+            temp = temp %>% arrange(-mean,var,-total)
+        }
+            
+    })
+
+    output$recommend_game_text = renderPrint({
+        top10 = tag_data()$appid %>% head(10)
+        top10_name = data.focus %>% filter(appid %in% top10) %>% .$name %>% as.character()
+        top10_name
+    })
+    
+    
+    # 디버깅용
+    output$recommend_game_data = DT::renderDataTable({
+        tag_data()
+    })
+    
 }
 
 # Run the application 
