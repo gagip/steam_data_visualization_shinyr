@@ -5,9 +5,9 @@ account: gagip
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1539436
-bundleId: 2632398
+bundleId: 2645859
 url: https://gagip.shinyapps.io/Steam/
-when: 1575292447.29433
+when: 1575612494.52027
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: word_cloud|Word.png
+ignoredFiles: .gitignore.swp|word_cloud|Word.png

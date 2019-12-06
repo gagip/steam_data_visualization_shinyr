@@ -6,10 +6,9 @@ library(scales)
 library(leaflet)
 library(shiny)
 
-# 텍스트 마이닝 패키지 
-library(igraph)
-library(tm)
-library(wordcloud)
+
+# radarchart
+library(fmsb)
 
 
 load("data/steam.tag.table.RData")
@@ -113,6 +112,7 @@ ui <- fluidPage(
                             mainPanel(
                                 verbatimTextOutput(outputId = "recommend_game_text"),
                                 includeHTML("test.html"),
+                                plotOutput(outputId = "radar"),
                                 DT::dataTableOutput(outputId = "recommend_game_data")
                             )
                             
@@ -283,17 +283,36 @@ server <- function(input, output) {
     })
 
     output$recommend_game_text = renderPrint({
-        top10 = tag_data()$appid %>% head(10)
+        top10 = tag_data()$appid %>% head(3)
         top10_name = data.focus %>% filter(appid %in% top10) %>% .$name %>% as.character()
         top10_name
     })
     
-    
+
+    output$radar = renderPlot({
+        dd = tag_data() %>% select(-mean, -var, -total) %>% head(3)
+        dd = as.data.frame(dd, row.names = dd$appid) # 행 이름으로 만들자
+        dd = dd[,-1] # 행이름 변수 삭제
+        
+        dd = rbind(apply(dd,2,max), apply(dd,2,min), dd)
+        
+        # color
+        colors_border=c( rgb(0.2,0.5,0.5,0.9), rgb(0.8,0.2,0.5,0.9) , rgb(0.7,0.5,0.1,0.9) )
+        colors_in=c( rgb(0.2,0.5,0.5,0.4), rgb(0.8,0.2,0.5,0.4) , rgb(0.7,0.5,0.1,0.4) )
+        
+        # chart
+        radarchart(dd, axistype = 1,
+                   pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+                   cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,20,5), cglwd=0.8,
+                   vlcex=0.8)
+    })
+        
     # 디버깅용
     output$recommend_game_data = DT::renderDataTable({
         tag_data()
     })
     
+
 }
 
 # Run the application 
