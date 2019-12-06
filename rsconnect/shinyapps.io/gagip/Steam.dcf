@@ -1,0 +1,13 @@
+name: Steam
+title: Steam
+username:
+account: gagip
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1539436
+bundleId: 2632398
+url: https://gagip.shinyapps.io/Steam/
+when: 1575292447.29433
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: word_cloud|Word.png
