@@ -5,12 +5,12 @@ library(stringr)
 library(scales)
 library(leaflet)
 library(shiny)
-
+library(ggvis)
 
 # radarchart
 library(fmsb)
 #remotes::install_github("gusef/d3Toolbox")
-require(d3Toolbox)
+#require(d3Toolbox)
 
 
 load("data/steam.tag.table.RData")
@@ -38,39 +38,71 @@ ui <- fluidPage(
                             sidebarPanel(
                                 conditionalPanel(
                                     'input.mainplot1 === "그래프"',
-                                    # 장르
-                                    selectInput(inputId = "genres",
-                                                label = "장르 선택",
-                                                choices = c("Action", "Indie", "RPG", 
-                                                            "Strategy", "Simulation", "Casual",
-                                                            "Sports", "Racing"),
-                                                multiple = T,
-                                                selected = c("Action", "Indie", "RPG", "Simulation")),
-                                    # 날짜
-                                    dateRangeInput(inputId = "DateRange",
-                                                   label = "날짜",
-                                                   start = "2006-01-01",
-                                                   end = "2019-04-22"),
-                                    # 랭킹 기준
-                                    selectInput(inputId = "rank_criterion",
-                                                label = "랭킹 기준",
-                                                choices = c("인기순" = "total_vote",
-                                                            "긍정 수" = "positive_ratings",
-                                                            "부정 수" = "negative_ratings",
-                                                            "예상 매출액" = "pred_sales")),
-                                    # 상위
-                                    sliderInput(inputId = "ranking",
-                                                label = "상위 몇 퍼?",
-                                                min = 0,
-                                                max = 100,
-                                                value = c(0,100)),
-                                    
+                                    # 그래프
                                     selectInput(inputId = "plot_type",
                                                 label = "보시고 싶은 정보",
                                                 choices = c("년도별 출시 빈도" = "release_by_year",
                                                             "좋아요/싫어요" = "positive_negative",
                                                             "장르별 예상매출량" = "sales_by_year"
-                                                ))
+                                                )),
+                                    
+                                    # type1 
+                                    conditionalPanel(
+                                        "input.plot_type != 'positive_negative'",
+                                        # 장르
+                                        selectInput(inputId = "genres",
+                                                    label = "장르 선택",
+                                                    choices = c("Action", "RPG", "Indie",
+                                                                "Strategy", "Simulation", "Casual",
+                                                                "Sports", "Racing"),
+                                                    multiple = T,
+                                                    selected = c("Action", "Indie", "RPG", "Simulation")),
+                                        # 날짜
+                                        dateRangeInput(inputId = "DateRange",
+                                                       label = "날짜",
+                                                       start = "2006-01-01",
+                                                       end = "2019-04-22"),
+                                        # 랭킹 기준
+                                        selectInput(inputId = "rank_criterion",
+                                                    label = "랭킹 기준",
+                                                    choices = c("인기순" = "total_vote",
+                                                                "긍정 수" = "positive_ratings",
+                                                                "부정 수" = "negative_ratings",
+                                                                "예상 매출액" = "pred_sales")),
+                                        # 상위
+                                        sliderInput(inputId = "ranking",
+                                                    label = "상위 몇 퍼?",
+                                                    min = 0,
+                                                    max = 100,
+                                                    value = c(0,100))
+                                    ),
+                                    
+                                    conditionalPanel(
+                                        "input.plot_type == 'positive_negative'",
+                                        # 장르
+                                        checkboxGroupInput(inputId = "genres1",
+                                                    label = "장르 선택",
+                                                    choices = c("Action",  "RPG", "Indie",
+                                                                "Strategy", "Simulation", "Casual",
+                                                                "Sports", "Racing"),
+                                                    selected = c("Action", "Indie", "RPG")),
+                                        # 랭킹 기준
+                                        selectInput(inputId = "rank_criterion1",
+                                                    label = "랭킹 기준",
+                                                    choices = c("인기순" = "total_vote",
+                                                                "긍정 수" = "positive_ratings",
+                                                                "부정 수" = "negative_ratings",
+                                                                "예상 매출액" = "pred_sales")),
+                                        # 상위
+                                        sliderInput(inputId = "ranking1",
+                                                    label = "상위 몇 퍼?",
+                                                    min = 0,
+                                                    max = 100,
+                                                    value = c(45,50))
+                                        )
+
+                                    
+
                                 ),
                                 conditionalPanel(
                                     'input.mainplot1 === "GamePlot222"'
@@ -86,7 +118,28 @@ ui <- fluidPage(
                                 tabsetPanel(
                                     id = "mainplot1",
                                     tabPanel(
-                                        "그래프" , plotOutput(outputId = "GamePlot", width = "100%", height = 600)
+                                        "그래프" , 
+                                        # conditionalPanel(
+                                        #     "input.plot_type == 'release_by_year'",
+                                        #     plotOutput(outputId = "GamePlot", width = "100%", height = 600)
+                                        # ),
+                                        # conditionalPanel(
+                                        #     "input.plot_type == 'positive_negative'",
+                                        #     ggvisOutput("p")
+                                        # ),
+                                        # conditionalPanel(
+                                        #     "input.plot_type == 'sales_by_year'",
+                                        #     plotOutput(outputId = "GamePlot", width = "100%", height = 600)
+                                        # ),
+                                        conditionalPanel(
+                                            "input.plot_type == 'positive_negative'",
+                                            ggvisOutput("p")
+                                        ),
+                                        # conditionalPanel(
+                                        #     "input.plot_type != 'positive_negative'",
+                                        #     plotOutput(outputId = "GamePlot", width = "100%", height = 600)
+                                        # )
+                                        plotOutput(outputId = "GamePlot", width = "100%", height = 600)
                                         # d3BarplotOutput(outputId = "GamePlot", width = "100%", height = 600)
                                     ),
                                     tabPanel(
@@ -120,9 +173,9 @@ ui <- fluidPage(
                             #-----------------------------------------
                             mainPanel(
                                 verbatimTextOutput(outputId = "recommend_game_text"),
-                                includeHTML("test.html"),
-                                plotOutput(outputId = "radar"),
-                                DT::dataTableOutput(outputId = "recommend_game_data")
+                                # includeHTML("test.html"),
+                                plotOutput(outputId = "radar")
+                                # DT::dataTableOutput(outputId = "recommend_game_data")
                             )
                             
                             
@@ -161,6 +214,24 @@ server <- function(input, output) {
                         rank_threshold[2]  >= rank)
     })
     
+    sample_data1 = reactive({
+        # 장르 필터
+        filter_idx = ifelse(data.focus %>% select(input$genres1) %>% rowSums == 0, FALSE, TRUE)
+        
+        
+        # 랭크 기준 필터
+        temp = data.focus[filter_idx,] %>% 
+            mutate(rank = rank(data.focus[filter_idx,] %>% select_(input$rank_criterion1) %>% -., ties.method = "min")) %>% 
+            arrange(rank)
+        
+        
+        # 랭크 순위 필터
+        rank_threshold = input$ranking1 * (max(temp$rank) / 100)
+        temp %>% filter(rank_threshold[1]  <= rank,
+                        rank_threshold[2]  >= rank)
+    })
+    
+    
     #-----------------------------------------
     # 통계요약 테이블
     #-----------------------------------------
@@ -176,18 +247,6 @@ server <- function(input, output) {
     #-----------------------------------------
     # 통계요약 테이블 그래프
     #-----------------------------------------
-    # output$GamePlot = renderd3Barplot({
-    #     require(d3Toolbox)
-    #     data <- 1:15
-    #     names(data) <- c(LETTERS[1:15])
-    #     
-    #     d3Barplot(data,
-    #               col=c('steelblue'),
-    #               xlab='Letters',
-    #               ylab='Frequencies',
-    #               title='New Barplot',
-    #               subtitle='with subtitle')
-    # })
     output$GamePlot <- renderPlot({
         # 테마 및 plot 세팅 통일 (글씨 크기 등)
         theme_setting = theme(axis.text.x = element_text(face = "bold", size = 15),
@@ -228,31 +287,26 @@ server <- function(input, output) {
         }
         # 긍정/부정 비율
         else if (input$plot_type == "positive_negative"){
-            pn_plot = sample_data() %>%
-                # 데이터 전처리
-                ggplot( aes( x = like_rate,
-                             y = total_like_unlike)) +
-                geom_point() +
-                geom_vline(xintercept = 0.5) +
-                theme(axis.text.x = element_text(face = "bold", size = 15),
-                      axis.text = element_text(size = 15, face = "bold"),
-                      axis.title = element_text(size = 20, face = "bold"),
-                      legend.text = element_text(size = 13, face = "bold"),
-                      legend.title = element_text(size = 15, face = "bold"))
+            games = sample_data1()
             
-            # 장르에 따라 색깔별로 다르게 찍자
-            Color = c("#F8766D", "#BB9D00", "#00B81F", "#00C0B8", "#529EFF", "#E76BF3", "#FF6C90")
-            i = 1
-            for (genre in input$genres){
-                pn_plot = pn_plot + geom_point(mapping = aes( x = like_rate,
-                                                              y = total_like_unlike),
-                                               data = sample_data() %>%
-                                                   filter(sample_data() %>% select_(genre) == 1),
-                                               col = Color[i])
-                i = i + 1
-            }
-            pn_plot + scale_color_manual("dd", values = Color, label = input$genres, guide="legend") +
-                scale_y_log10()
+            # 데이터 비중
+            games = games %>% mutate(genre = genres %>% str_split(";") %>% lapply(function(x){x[1]}) %>% unlist)
+            # 데이터 필터
+            games = games %>% filter(genre %in% input$genres1)
+            games %>%
+                ggvis(x = ~like_rate, y = ~total_like_unlike) %>%
+                #scale_numeric("y", trans="log") %>%
+                layer_points(size := 50, size.hover := 200,
+                             fillOpacity := 0.2, fillOpacity.hover := 0.5, key := ~appid,
+                             stroke = ~genre) %>%
+                add_tooltip(point_tooltip, "hover") %>%
+                add_axis("x", title = "긍정 리뷰 비율 (%)") %>%
+                add_axis("y", title = "총 리뷰 수 (개)") %>%
+                set_options(width = 700, height = 500) %>%
+                scale_nominal("stroke",
+                              range = c("#CC0000", "#aaa", "orange", "#009900", "#0000FF",
+                                        "#9900CC", "#FF00FF", "#000000", "#330033")) %>%
+                bind_shiny("p")
         }
         # 년도별 매출량
         else if (input$plot_type == "sales_by_year"){
@@ -297,6 +351,23 @@ server <- function(input, output) {
                       legend.title = element_text(size = 15, face = "bold"))
         }
     })
+    
+    # Function for generating tooltip text
+    point_tooltip <- function(x) {
+        if (is.null(x)) return(NULL)
+        if (is.null(x$appid)) return(NULL)
+        
+        # Pick out the game with this ID
+        all_games <- isolate(sample_data())
+        game <- all_games[all_games$appid == x$appid, ]
+        
+        paste0("<b>", game$name, "</b><br>",
+               "출시일: ", game$release_date, "<br>",
+               "긍정 리뷰 수: ", game$positive_ratings, "개 <br>",
+               "부정 리뷰 수: ", game$negative_ratings, "개 <br>",
+               "가격: $", format(game$price, big.mark = ",", scientific = FALSE)
+        )
+    }
     
     #-----------------------------------------
     # 추천분석 테이블 그래프
